@@ -10,7 +10,7 @@ metadata = {
     # - Allowed characters: A-Z, a-z, 0-9, -, _ (no spaces allowed)
     # - Minimum length: 3 characters
     # - Maximum length: 20 characters
-    "team_name": f"", 
+    "team_name": "H-I", 
 
     # Fill in the student IDs and emails of both team members here. There must
     # be exactly two members in the list. 
