@@ -9,6 +9,11 @@ BOARD_N = 8
 BoardState = frozenset
 
 
+def _copy_board(board: dict[Coord, CellState]) -> dict[Coord, CellState]:
+    """辅助函数：返回当前棋盘的浅拷贝。"""
+    return dict(board)
+
+
 def board_to_state(board: dict[Coord, CellState]) -> BoardState:
     return frozenset((coord, cell.color, cell.height) for coord, cell in board.items())
 
@@ -33,13 +38,13 @@ def push_stack(
     target_c = coord.c + direction.c
 
     if not (0 <= target_r < BOARD_N and 0 <= target_c < BOARD_N):
-        # Pushing off board removes the stack
-        new_board = dict(board)
+        # 推出边界：这个堆栈从棋盘上移除
+        new_board = _copy_board(board)
         del new_board[coord]
         return new_board
 
     target = Coord(target_r, target_c)
-    new_board = dict(board)
+    new_board = _copy_board(board)
     del new_board[coord]
 
     if target in new_board:
@@ -56,10 +61,9 @@ def apply_cascade(
     height: int,
     source_color,
 ) -> dict[Coord, CellState]:
-    # Cascade: remove the original stack and place tokens along the direction
-    # Each position 1 to height cells away gets a token of the cascading color
-    # If a stack is in the way, it gets pushed further
-    new_board = dict(board)
+    # Cascade：移除源堆栈，并按方向分布高度个单元格的token。
+    # 1..height每个位置都放入一个新的单元格，如果有阻碍则先推开原堆栈。
+    new_board = _copy_board(board)
     if coord in new_board:
         del new_board[coord]
 
@@ -85,8 +89,8 @@ def apply_cascade(
 
 
 def get_possible_actions(board: dict[Coord, CellState]) -> list[tuple[Action, dict[Coord, CellState]]]:
-    #Get all legal actions from the current board state.
-    possible = []
+    # 计算当前棋盘状态下的所有合法行动
+    action_candidates = []
 
     for coord, cell in list(board.items()):
         if cell.color is None or cell.color.name != "RED":
@@ -103,37 +107,37 @@ def get_possible_actions(board: dict[Coord, CellState]) -> list[tuple[Action, di
 
             dest_cell = board.get(dest)
 
-            #Move
+            # Move  操作：红色可直接移动或与红色合并
             if dest_cell is None:
-                new_board = dict(board)
+                new_board = _copy_board(board)
                 del new_board[coord]
                 new_board[dest] = cell
-                possible.append((MoveAction(coord, direction), new_board))
+                action_candidates.append((MoveAction(coord, direction), new_board))
             elif dest_cell.color is not None and dest_cell.color.name == "RED":
-                new_board = dict(board)
+                new_board = _copy_board(board)
                 del new_board[coord]
                 merged_height = cell.height + dest_cell.height
                 new_board[dest] = CellState(cell.color, merged_height)
-                possible.append((MoveAction(coord, direction), new_board))
+                action_candidates.append((MoveAction(coord, direction), new_board))
 
-            #Eat
+            # Eat  操作：红色吃掉高度不超过自己的蓝色
             if (
                 dest_cell is not None
                 and dest_cell.color is not None
                 and dest_cell.color.name == "BLUE"
                 and cell.height >= dest_cell.height
             ):
-                new_board = dict(board)
+                new_board = _copy_board(board)
                 del new_board[coord]
                 new_board[dest] = CellState(cell.color, cell.height)
-                possible.append((EatAction(coord, direction), new_board))
+                action_candidates.append((EatAction(coord, direction), new_board))
 
-            #Cascade
+            # Cascade
             if cell.height >= 2:
                 new_board = apply_cascade(board, coord, direction, cell.height, cell.color)
-                possible.append((CascadeAction(coord, direction), new_board))
+                action_candidates.append((CascadeAction(coord, direction), new_board))
 
-    return possible
+    return action_candidates
 
 
 def heuristic_function(board: dict[Coord, CellState]) -> int:
