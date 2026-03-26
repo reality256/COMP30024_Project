@@ -2,6 +2,7 @@
 # Project Part A: Single Player Cascade
 
 import heapq
+import math
 from .core import CellState, Coord, Direction, Action, MoveAction, EatAction, CascadeAction
 from .utils import render_board
 
@@ -141,49 +142,12 @@ def get_possible_actions(board: dict[Coord, CellState]) -> list[tuple[Action, di
 
 
 def heuristic_function(board: dict[Coord, CellState]) -> int:
-    """
-    启发函数：估计从当前状态到目标状态所需的最少步骤数。
-    
-    使用多层级启发函数，确保admissible（永不高估）。
-    层级：
-    1. 蓝色堆栈数量（每个必须消除）
-    2. 红色高度不足的补偿
-    3. 位置优化：最近的红色到最近的蓝色
-    """
-    blue_stacks = []
-    red_stacks = []
-    
-    for coord, cell in board.items():
-        if cell.color is not None:
-            if cell.color.name == "BLUE":
-                blue_stacks.append((coord, cell.height))
-            elif cell.color.name == "RED":
-                red_stacks.append((coord, cell.height))
-    
-    # 目标状态
-    if not blue_stacks:
-        return 0
-    
-    # 无法解决
-    if not red_stacks:
-        return 1000
-    
-    # 基础启发值：蓝色堆栈数量
-    num_blue = len(blue_stacks)
-    max_blue_height = max(h for _, h in blue_stacks) if blue_stacks else 1
-    max_red_height = max(h for _, h in red_stacks) if red_stacks else 0
-    
-    # 因素1: 必须消除的蓝色数量
-    h_value = num_blue
-    
-    # 因素2: 如果红色不足以吃掉最强的蓝色，需要增长
-    if max_red_height < max_blue_height:
-        height_deficit = max_blue_height - max_red_height
-        # 需要多少次合并来达到所需高度
-        # 最坏情况：每次合并只增加1（实际上可以更优，但这保证admissible）
-        h_value += height_deficit
-    
-    return h_value
+
+    num_blues = sum(
+        1 for cell in board.values()
+        if cell.color is not None and cell.color.name == "BLUE"
+    )
+    return num_blues
 
 
 def a_star_search(initial_board: dict[Coord, CellState]) -> list[Action] | None:
