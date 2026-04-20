@@ -11,7 +11,7 @@ from referee.game.exceptions import IllegalActionException
 
 
 WIN_SCORE = 1_000_000
-SEARCH_DEPTH = 2
+SEARCH_DEPTH = 4
 
 
 class Agent:
