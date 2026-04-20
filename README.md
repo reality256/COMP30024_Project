@@ -1,3 +1,4 @@
+# Minimax V1
 I uploaded the first version using **minimax** and $\alpha-\beta$ **pruning**.
 
 The code is workable by test but still needs refinement.
