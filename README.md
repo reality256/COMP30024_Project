@@ -1,9 +1,18 @@
-# Minimax V1
-I uploaded the first version using **minimax** and $\alpha-\beta$ **pruning**.
+# Cascade Agent
 
-The code is workable by test but still needs refinement.
+This version is still based on **minimax with alpha-beta pruning**, but it has been refined from the first version into a more practical tournament agent.
 
-1. Some parameters regarding the `evaluate` function and `action_priority` need to be tuned.(Perhaps Machine learning can help)
-2. After some test against itself, I found that with search step 2(I know it's very small, I just use it for a simple test) it will always split the stacks and maintaining a tie situation till exceeding the maximum turns(300 turns). I think some encouragement on applying merge can be used.
-  <img width="927" height="327" alt="image" src="https://github.com/user-attachments/assets/dc068fa6-22c1-4799-9f86-1cdb0a5a0e24" />
-3. I planned to set up an easily-performing agent, but I haven't really come up with one. This can test the ability for our agent to fight against others.
+Compared with the previous version:
+
+1. The search now uses **iterative deepening**, so the agent can return the best result from the deepest fully completed search when time is limited.
+2. The time control is more careful. The agent allocates different budgets for placement and play phases, keeps a safety margin, and reduces depth when little time remains.
+3. Legal actions are ordered before search. Captures, useful cascades, central placements, and merge moves are prioritised to improve alpha-beta pruning.
+4. The branching factor is controlled by limiting the number of actions searched at the root and inside the tree.
+5. The evaluation function now considers more game-specific features, including material, stack count, available captures, cascade potential, placement quality, turn-limit pressure, and repetition risk.
+6. A fallback action and final referee legality check are used so the agent can still return a safe legal move if search is interrupted.
+
+For a fuller design description, see `approach_report.md`.
+
+## Known Issue
+
+When testing against `agent_simple`, the game may be interrupted because `agent_simple` can sometimes produce an illegal action during the middle of the game. This is an issue with the simple testing opponent rather than the main agent. If this happens, the referee may stop the match before the result reflects the actual strength of the current agent.
